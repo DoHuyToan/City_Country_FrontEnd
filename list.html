@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+</head>
+<script type="text/javascript">
+
+    function addNewCity() {
+        let name = $('#name').val();
+        let population = $('#population').val();
+        let area = $('#area').val();
+        let gdp = $('#gdp').val();
+        let description = $('#description').val();
+        let country = $('#country').val();
+        let newCity = {
+            name: name,
+            population: population,
+            area: area,
+            gdp: gdp,
+            description: description,
+            country: {id: country}
+        };
+        $.ajax({
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            type: "POST",
+            data: JSON.stringify(newCity),
+            url: "http://localhost:8080/city/create",
+            success: successHandler
+        })
+        event.preventDefault();
+    }
+
+    function successHandler() {
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:8080/city/list",
+            success: function (data) {
+                let content = '    <tr>\n' +
+                    '        <th>Name</th>\n' +
+                    '        <th>Population</th>\n' +
+                    '        <th>Area</th>\n' +
+                    '        <th>Gdp</th>\n' +
+                    '        <th>Description</th>\n' +
+                    '        <th>City</th>\n' +
+                    '        <th>Edit</th>\n' +
+                    '        <th>Delete</th>\n' +
+                    '    </tr>';
+                for (let i = 0; i < data.length; i++) {
+                    content += getCity(data[i]);
+                }
+                document.getElementById('cityList').innerHTML = content;
+            }
+        })
+    }
+    successHandler();
+
+    function getCity(city) {
+        return `<tr><td >${city.name}</td>
+                        <td >${city.population}</td>
+                        <td >${city.area}</td>
+                        <td >${city.gdp}</td>
+                        <td >${city.description}</td>
+                        <td >${city.country.name}</td>` +
+            `<td><button type="submit" value="${city.id}" onclick="showEdit(this)">Edit</button></td>` +
+            `<td><button type="submit" value="${city.id}" onclick="deleteCustomer(this)">Delete</button></td></tr>`
+    }
+
+    listCountry('countryEdit')
+    listCountry('country')
+    function listCountry(a) {
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:8080/country/list",
+            success: function (data){
+                let content;
+                for (let i=0; i<data.length; i++ ){
+                    content += getCountry(data[i])
+                }
+                document.getElementById(a).innerHTML = content;
+            }
+        })
+    }
+    //
+    function getCountry(country){
+        return `<option value="${country.id}">${country.name}</option>`
+    }
+
+    function deleteCustomer(a){
+        let id=a.getAttribute("value");
+        $.ajax({
+            type:"DELETE",
+            url:"http://localhost:8080/city/delete/"+id,
+            success:successHandler
+        })
+    }
+
+    function showEdit(a) {
+        let id = a.getAttribute("value");
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:8080/city/" + id,
+            success: function (city) {
+                $('#idEdit').val(city.id);
+                $('#nameEdit').val(city.name);
+                $('#populationEdit').val(city.population);
+                $('#areaEdit').val(city.area);
+                $('#gdpEdit').val(city.gdp);
+                $('#descriptionEdit').val(city.description);
+                $('#countryEdit').val(city.country);
+            }
+        })
+        event.preventDefault();
+    }
+
+    function updateCity(){
+        let id=$('#idEdit').val();
+        let name=$('#nameEdit').val();
+        let population=$('#populationEdit').val();
+        let area=$('#areaEdit').val();
+        let gdp=$('#gdpEdit').val();
+        let description=$('#descriptionEdit').val();
+        let country=$('#countryEdit').val();
+        let city={
+            id :id,
+            name:name,
+            population:population,
+            area:area,
+            gdp:gdp,
+            description:description,
+            country: {id:country}
+        };
+        $.ajax({
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            type: "PUT",
+            url: "http://localhost:8080/city/edit",
+            data: JSON.stringify(city),
+            success:successHandler
+        })
+        event.preventDefault();
+    }
+
+</script>
+<body>
+<form id="add-city" style="display: block">
+    <h2>Create City</h2>
+    <table>
+        <tr>
+            <td>Name:</td>
+            <td><input type="text" id="name" placeholder="name"></td>
+        </tr>
+        <tr>
+            <td>Population:</td>
+            <td><input type="text" id="population" placeholder="population"></td>
+        </tr><tr>
+            <td>Area:</td>
+            <td><input type="text" id="area" placeholder="area"></td>
+        </tr><tr>
+            <td>Gdp:</td>
+            <td><input type="text" id="gdp" placeholder="gdp"></td>
+        </tr><tr>
+            <td>Description:</td>
+            <td><input type="text" id="description" placeholder="description"></td>
+        </tr></tr>
+        <tr>
+            <td>Country:</td>
+            <td>
+                <select id="country">
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td><input type="submit" value="Create new" onclick="addNewCity()"></td>
+        </tr>
+    </table>
+</form>
+<h1>CITY LIST</h1>
+<table border="1" id="cityList">
+
+</table>
+<br>
+<h2>Edit City</h2>
+<form id="editForm">
+    <table>
+        <input type="text" id="idEdit" hidden/>
+        <tr>
+            <td>Name :</td>
+            <td><input type="text" id="nameEdit" placeholder=" name change"></td>
+        </tr>
+        <tr>
+            <td>Population :</td>
+            <td><input type="text" id="populationEdit" placeholder=" population change"></td>
+        </tr>
+        <tr>
+            <td>Area :</td>
+            <td><input type="text" id="areaEdit" placeholder=" area change"></td>
+        </tr>
+        <tr>
+            <td>Gdp :</td>
+            <td><input type="text" id="gdpEdit" placeholder=" gdp change"></td>
+        </tr>
+         <tr>
+            <td>Description :</td>
+            <td><input type="text" id="descriptionEdit" placeholder=" description change"></td>
+        </tr>
+        <tr>
+            <td>Country:</td>
+            <td>
+                <select id="countryEdit">
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" value="Edit" onclick="updateCity()"></td>
+        </tr>
+    </table>
+</form>
+</body>
+</html>
